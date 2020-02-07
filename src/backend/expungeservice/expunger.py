@@ -12,13 +12,6 @@ from expungeservice.models.record import Record
 
 
 class Expunger:
-    """
-    The TimeAnalyzer is probably the last major chunk of non-functional code.
-    We mutate the charges in the record directly to add time eligibility information.
-    Hence, for example, it is unsafe to deepcopy any elements in the "chain" stemming from record
-    including closed_charges, charges, self.charges_with_summary.
-    """
-
     def __init__(self, record: Record):
         self.record = record
         self.analyzable_charges = Expunger._without_skippable_charges(self.record.charges)
@@ -59,6 +52,16 @@ class Expunger:
                 eligibility_dates.append(
                     (charge.disposition.date + relativedelta(years=1), "Time-ineligible under 137.225(1)(b)")
                 )
+
+            if charge.convicted():
+                probation_revoked_date = charge.case()().get_probation_revoked()
+                if probation_revoked_date:
+                    eligibility_dates.append(
+                        (
+                            probation_revoked_date + relativedelta(years=10),
+                            "Time-ineligible under 137.225(1)(c). Inspect further if the case has multiple convictions on the case.",
+                        )
+                    )
 
             if most_recent_blocking_conviction:
                 eligibility_dates.append(
