@@ -14,6 +14,7 @@ from expungeservice.models.charge_types.violation import Violation
 from expungeservice.models.charge_types.parking_ticket import ParkingTicket
 from expungeservice.models.charge_types.person_felony import PersonFelonyClassB
 from expungeservice.models.charge_types.schedule_1_p_c_s import Schedule1PCS
+from expungeservice.models.charge_types.contempt_of_court import ContemptOfCourt
 from expungeservice.models.charge_types.civil_offense import CivilOffense
 from expungeservice.models.charge_types.unclassified_charge import UnclassifiedCharge
 from expungeservice.models.charge_types.sex_crimes import SexCrime
@@ -42,6 +43,7 @@ class ChargeClassifier:
         yield from ChargeClassifier._classification_by_statute(self.statute, self.chapter, self.section, self.level)
         yield ChargeClassifier._parking_ticket(self.violation_type)
         yield from ChargeClassifier._classification_by_level(self.level, self.statute)
+        yield ChargeClassifier._contempt_of_court(self.name)
         yield ChargeClassifier._civil_offense(self.statute, self.chapter, self.name)
 
         yield UnclassifiedCharge
@@ -102,6 +104,10 @@ class ChargeClassifier:
                     return TrafficNonViolation
                 else:
                     return TrafficViolation
+    @staticmethod
+    def _contempt_of_court(name):
+        if "contempt of court" in name.lower():
+            return ContemptOfCourt
 
     @staticmethod
     def _civil_offense(statute, chapter, name):
